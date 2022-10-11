@@ -174,36 +174,47 @@ public:
 		std::size_t i = offset >> 3, j = startByte + 1;
 		std::size_t resultBit  = offset & 0b111;
 		std::size_t resultMask = (1 << resultBit) - 1;
-		auto        writeValue = [&](std::uint8_t value)
+		auto        writeValue = [&](std::uint8_t value, std::size_t readBits)
 		{
 			if (count > (8 - resultBit))
 			{
 				result.m_Data[i]     = result.m_Data[i] & resultMask | static_cast<std::uint8_t>(value << resultBit);
 				result.m_Data[i + 1] = value >> (8 - resultBit);
 			}
-			else
+			else if (resultBit == 0)
 			{
 				result.m_Data[i] = value;
 			}
-			++i;
-			count -= 8;
+			else
+			{
+				result.m_Data[i] = result.m_Data[i] & resultMask | static_cast<std::uint8_t>(value << resultBit);
+			}
+
+			resultBit += readBits;
+			if (resultBit >= 8)
+			{
+				resultBit -= 8;
+				++i;
+			}
+			resultMask = (1 << resultBit) - 1;
+			count -= readBits;
 		};
 		if (count <= 8 - startBit)
 		{
 			std::uint8_t mask = (1 << count) - 1;
-			writeValue((m_Data[startByte] >> startBit) & mask);
+			writeValue((m_Data[startByte] >> startBit) & mask, count);
 			return;
 		}
 
-		writeValue(m_Data[startByte] >> startBit);
+		writeValue(m_Data[startByte] >> startBit, 8 - startBit);
 
 		for (; count > 8; ++j)
-			writeValue(m_Data[j]);
+			writeValue(m_Data[j], 8);
 
 		if (count > 0)
 		{
 			std::uint8_t mask = (1 << count) - 1;
-			writeValue(m_Data[j] & mask);
+			writeValue(m_Data[j] & mask, count);
 		}
 	}
 
