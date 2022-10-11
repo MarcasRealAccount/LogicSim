@@ -1,0 +1,16 @@
+[submodule "ThirdParty/GLFW"]
+	path = ThirdParty/GLFW
+	url = https://github.com/glfw/glfw.git
+	branch = master
+[submodule "ThirdParty/SpdLog"]
+	path = ThirdParty/SpdLog
+	url = https://github.com/gabime/spdlog.git
+	branch = v1.x
+[submodule "ThirdParty/GLM"]
+	path = ThirdParty/GLM
+	url = https://github.com/g-truc/glm.git
+	branch = master
+[submodule "ThirdParty/STB"]
+	path = ThirdParty/STB
+	url = https://github.com/nothings/stb.git
+	branch = master
