@@ -112,7 +112,7 @@ namespace ResourceManager
 				// On region boundary, extend region, merge with next region if they touch
 				for (auto it = iterator + 1; it != m_Regions.end(); ++it)
 					++it->m_Offset;
-				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset + (iterator->m_End - iterator->m_Start), std::forward<Args>(args)...);
+				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset + (iterator->m_End - iterator->m_Start) + 1, std::forward<Args>(args)...);
 				iterator->m_End = m_CurrentIndex;
 
 				auto nextIterator = iterator + 1;
@@ -211,7 +211,7 @@ namespace ResourceManager
 				// On region boundary, extend region, merge with next region if they touch
 				for (auto it = iterator + 1; it != m_Regions.end(); ++it)
 					++it->m_Offset;
-				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset + (iterator->m_End - iterator->m_Start), std::forward<Args>(args)...);
+				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset + (iterator->m_End - iterator->m_Start) + 1, std::forward<Args>(args)...);
 				iterator->m_End = index;
 
 				auto nextIterator = iterator + 1;
