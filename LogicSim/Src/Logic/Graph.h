@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ResourceManager/ResourceManager.h"
+#include "TruthTable.h"
 
 #include <vector>
 
@@ -9,15 +10,14 @@ struct Component;
 struct Node
 {
 public:
-	Node(Component& component);
+	Node(ResourceManager::Ref<Component> component);
 	Node(Node&& move) noexcept
-	    : m_Component(move.m_Component),
+	    : m_Component(std::move(move.m_Component)),
 	      m_InputPorts(std::move(move.m_InputPorts)),
 	      m_OutputPorts(std::move(move.m_OutputPorts)) {}
 	Node& operator=(Node&& move) noexcept
 	{
-		*std::bit_cast<Component**>(this) = &move.m_Component;
-
+		m_Component   = std::move(move.m_Component);
 		m_InputPorts  = std::move(move.m_InputPorts);
 		m_OutputPorts = std::move(move.m_OutputPorts);
 		return *this;
@@ -33,7 +33,7 @@ public:
 	auto& getOutputPorts() const { return m_OutputPorts; }
 
 private:
-	Component& m_Component;
+	ResourceManager::Ref<Component> m_Component;
 
 	std::vector<std::size_t> m_InputPorts;
 	std::vector<std::size_t> m_OutputPorts;
@@ -62,10 +62,13 @@ public:
 	      m_OutputPorts(numOutputs, ~0ULL),
 	      m_NumConnections(0) {}
 
-	NodeRef newNode(Component& component);
+	NodeRef newNode(ResourceManager::Ref<Component> component);
 	void    removeNode(NodeRef node);
 	void    connect(Port a, Port b);
 	void    disconnect(Port a, Port b);
+
+	bool       compilable() const { return m_InputPorts.size() <= 16; }
+	TruthTable compile() const;
 
 	std::size_t inputCount() const { return m_InputPorts.size(); }
 	std::size_t outputCount() const { return m_OutputPorts.size(); }

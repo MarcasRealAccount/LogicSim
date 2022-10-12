@@ -1,6 +1,6 @@
 #include "GraphState.h"
 
-GraphState::GraphState(Graph& graph)
+GraphState::GraphState(const Graph& graph)
     : m_Graph(graph),
       m_Connections(m_Graph.connectionCount()),
       m_Inputs(m_Graph.inputCount()),
@@ -10,8 +10,8 @@ GraphState::GraphState(Graph& graph)
 	for (auto node : m_Graph.getNodes())
 	{
 		auto& component = node->getComponent();
-		if (component.getType() == EComponentType::Graph)
-			m_GraphNodes.emplace(node.index(), component.getGraph());
+		if (component->hasGraph())
+			m_GraphNodes.emplace(node.index(), component->getGraph());
 		else if (node->outputCount() > maxOutputs)
 			maxOutputs = node->outputCount();
 	}
@@ -37,9 +37,8 @@ void GraphState::tick()
 		auto& component   = node->getComponent();
 		auto& inputPorts  = node->getInputPorts();
 		auto& outputPorts = node->getOutputPorts();
-		switch (component.getType())
-		{
-		case EComponentType::TruthTable:
+
+		if (component->hasTruthTable())
 		{
 			std::uint16_t inputs = 0;
 			for (std::size_t i = 0; i < inputPorts.size(); ++i)
@@ -49,7 +48,7 @@ void GraphState::tick()
 					continue;
 				inputs |= m_Connections.get(connection) << i;
 			}
-			component.getTruthTable().getOutput(inputs, m_BuiltinOutputs);
+			component->getTruthTable().getOutput(inputs, m_BuiltinOutputs);
 			for (std::size_t i = 0; i < outputPorts.size(); ++i)
 			{
 				std::size_t connection = outputPorts[i];
@@ -57,9 +56,8 @@ void GraphState::tick()
 					continue;
 				m_Connections.set(connection, m_BuiltinOutputs.get(i));
 			}
-			break;
 		}
-		case EComponentType::Graph:
+		else if (component->hasGraph())
 		{
 			auto graphState = m_GraphNodes.getResource(node.index());
 			if (!graphState)
@@ -81,8 +79,6 @@ void GraphState::tick()
 					continue;
 				m_Connections.set(connection, outputs.get(i));
 			}
-			break;
-		}
 		}
 	}
 

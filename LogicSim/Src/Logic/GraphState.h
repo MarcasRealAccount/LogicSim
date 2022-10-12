@@ -10,7 +10,7 @@ struct GraphNode;
 struct GraphState
 {
 public:
-	GraphState(Graph& graph);
+	GraphState(const Graph& graph);
 	GraphState(GraphState&& move) noexcept
 	    : m_Graph(move.m_Graph),
 	      m_Connections(std::move(move.m_Connections)),
@@ -20,7 +20,7 @@ public:
 	      m_GraphNodes(std::move(move.m_GraphNodes)) {}
 	GraphState& operator=(GraphState&& move) noexcept
 	{
-		*std::bit_cast<Graph**>(this) = &move.m_Graph;
+		*std::bit_cast<const Graph**>(this) = &move.m_Graph;
 
 		m_Connections    = std::move(move.m_Connections);
 		m_Inputs         = std::move(move.m_Inputs);
@@ -40,6 +40,11 @@ public:
 		m_Inputs.setBits(values, offset, start, std::min(count, m_Inputs.size()));
 	}
 
+	void getOutputs(BitSet& result, std::size_t offset = 0, std::size_t start = 0, std::size_t count = ~0ULL)
+	{
+		m_Outputs.getBits(result, offset, start, std::min(count, m_Outputs.size()));
+	}
+
 	void tick();
 
 	std::size_t allocatedSizeOf() const
@@ -53,11 +58,11 @@ public:
 	}
 
 private:
-	Graph& m_Graph;
-	BitSet m_Connections;
-	BitSet m_Inputs;
-	BitSet m_Outputs;
-	BitSet m_BuiltinOutputs;
+	const Graph& m_Graph;
+	BitSet       m_Connections;
+	BitSet       m_Inputs;
+	BitSet       m_Outputs;
+	BitSet       m_BuiltinOutputs;
 
 	ResourceManager::ResourcePool<GraphNode> m_GraphNodes;
 };
@@ -65,7 +70,7 @@ private:
 struct GraphNode
 {
 public:
-	GraphNode(Graph& graph) : m_State(graph) {}
+	GraphNode(const Graph& graph) : m_State(graph) {}
 	GraphNode(GraphNode&& move) noexcept : m_State(std::move(move.m_State)) {}
 
 	GraphNode& operator=(GraphNode&& move) noexcept

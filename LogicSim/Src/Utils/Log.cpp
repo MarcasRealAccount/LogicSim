@@ -26,7 +26,7 @@ namespace Log
 		logger->set_pattern("[%T.%f][%16n][%^%8l%$][%7t] %v");
 
 		if constexpr (Core::s_IsConfigDist)
-			logger->set_level(spdlog::level::level_enum::err);
+			logger->set_level(spdlog::level::level_enum::trace);
 		else
 			logger->set_level(spdlog::level::level_enum::trace);
 

@@ -20,7 +20,7 @@ public:
 			filler(i, i * m_NumOutputs, m_Outputs);
 	}
 
-	void getOutput(std::uint16_t inputs, BitSet& outputs)
+	void getOutput(std::uint16_t inputs, BitSet& outputs) const
 	{
 		m_Outputs.getBits(outputs, 0, inputs * m_NumOutputs, m_NumOutputs);
 	}

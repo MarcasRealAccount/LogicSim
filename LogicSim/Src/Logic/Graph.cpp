@@ -1,12 +1,13 @@
 #include "Graph.h"
 #include "Component.h"
+#include "GraphState.h"
 
-Node::Node(Component& component)
+Node::Node(ResourceManager::Ref<Component> component)
     : m_Component(component),
-      m_InputPorts(component.inputCount(), ~0ULL),
-      m_OutputPorts(component.outputCount(), ~0ULL) {}
+      m_InputPorts(component->inputCount(), ~0ULL),
+      m_OutputPorts(component->outputCount(), ~0ULL) {}
 
-Graph::NodeRef Graph::newNode(Component& component)
+Graph::NodeRef Graph::newNode(ResourceManager::Ref<Component> component)
 {
 	return m_Nodes.emplaceBack(component);
 }
@@ -82,6 +83,24 @@ void Graph::disconnect(Port a, Port b)
 		return;
 
 	// TODO(MarcasRealAccount): Implement
+}
+
+TruthTable Graph::compile() const
+{
+	if (!compilable())
+		return TruthTable { 1, 1, [](std::uint16_t inputs, std::size_t bit, BitSet& outputs)
+			                {
+			                    outputs.set(bit, inputs);
+			                } };
+
+	GraphState state { *this };
+	return TruthTable { static_cast<std::uint8_t>(inputCount()), outputCount(), [&](std::uint16_t inputs, std::size_t bit, BitSet& outputs)
+		                {
+		                    state.setInputs({ static_cast<std::uint8_t>(inputs), static_cast<std::uint8_t>(inputs >> 8) });
+		                    // TODO(MarcasRealAccount): Maybe make Graph compilation better?
+		                    state.tick();
+		                    state.getOutputs(outputs, bit);
+		                } };
 }
 
 void Graph::setPortConnection(Port port, std::size_t connection)

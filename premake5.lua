@@ -12,7 +12,7 @@ workspace("LogicSim")
 
 	cppdialect("C++20")
 	rtti("Off")
-	exceptionhandling("Off")
+	exceptionhandling("On")
 	flags("MultiProcessorCompile")
 
 	startproject("LogicSim")
