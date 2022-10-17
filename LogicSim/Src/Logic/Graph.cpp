@@ -50,7 +50,7 @@ void Graph::connect(Port a, Port b)
 				m_OutputPorts[i] = connection;
 			else if (m_OutputPorts[i] > largeConnection)
 				--m_OutputPorts[i];
-		for (auto node : m_Nodes)
+		for (auto& node : m_Nodes)
 		{
 			auto& inputPorts  = node->getInputPorts();
 			auto& outputPorts = node->getOutputPorts();

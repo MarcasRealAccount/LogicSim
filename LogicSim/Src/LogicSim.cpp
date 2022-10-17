@@ -15,7 +15,7 @@ LogicSim::ComponentRef LogicSim::getComponent(NamespaceName name, std::size_t mi
 {
 	ComponentRef closestComp;
 	std::size_t  closestInputCount = ~0ULL;
-	for (auto comp : m_Components)
+	for (auto& comp : m_Components)
 	{
 		if (comp->getName() != name)
 			continue;
@@ -23,7 +23,7 @@ LogicSim::ComponentRef LogicSim::getComponent(NamespaceName name, std::size_t mi
 		std::size_t inputCount = comp->inputCount();
 		if (inputCount >= minInputCount && inputCount < closestInputCount)
 		{
-			closestComp       = comp;
+			closestComp       = { &m_Components, comp.index() };
 			closestInputCount = inputCount;
 		}
 	}

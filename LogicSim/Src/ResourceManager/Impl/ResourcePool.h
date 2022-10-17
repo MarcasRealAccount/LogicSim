@@ -11,88 +11,6 @@
 namespace ResourceManager
 {
 	template <class T, class IndexType>
-	ResourcePoolIterator<T, IndexType>::operator ResourcePoolConstIterator<T, IndexType>() const
-	{
-		return ResourcePoolConstIterator<T, IndexType> { m_Pool, m_RegionIndex, m_Index };
-	}
-
-	template <class T, class IndexType>
-	typename ResourcePoolIterator<T, IndexType>::value_type ResourcePoolIterator<T, IndexType>::operator*()
-	{
-		return Ref { m_Pool, m_Index };
-	}
-
-	template <class T, class IndexType>
-	const typename ResourcePoolIterator<T, IndexType>::value_type ResourcePoolIterator<T, IndexType>::operator*() const
-	{
-		return Ref { m_Pool, m_Index };
-	}
-
-	template <class T, class IndexType>
-	ResourcePoolIterator<T, IndexType>& ResourcePoolIterator<T, IndexType>::operator++()
-	{
-		if (m_RegionIndex > m_Pool->m_Regions.size())
-			return *this;
-		if (++m_Index > m_Pool->m_Regions[m_RegionIndex].m_End)
-		{
-			if (++m_RegionIndex > m_Pool->m_Regions.size())
-				return *this;
-			m_Index = m_Pool->m_Regions[m_RegionIndex].m_Start;
-		}
-		return *this;
-	}
-
-	template <class T, class IndexType>
-	ResourcePoolIterator<T, IndexType> ResourcePoolIterator<T, IndexType>::operator++(int)
-	{
-		if (m_RegionIndex > m_Pool->m_Regions.size())
-			return *this;
-		ResourcePoolIterator copy = *this;
-		if (++m_Index > m_Pool->m_Regions[m_RegionIndex].m_End)
-		{
-			if (++m_RegionIndex > m_Pool->m_Regions.size())
-				return copy;
-			m_Index = m_Pool->m_Regions[m_RegionIndex].m_Start;
-		}
-		return copy;
-	}
-
-	template <class T, class IndexType>
-	const typename ResourcePoolConstIterator<T, IndexType>::value_type ResourcePoolConstIterator<T, IndexType>::operator*() const
-	{
-		return ConstRef { m_Pool, m_Index };
-	}
-
-	template <class T, class IndexType>
-	ResourcePoolConstIterator<T, IndexType>& ResourcePoolConstIterator<T, IndexType>::operator++()
-	{
-		if (m_RegionIndex > m_Pool->m_Regions.size())
-			return *this;
-		if (++m_Index > m_Pool->m_Regions[m_RegionIndex].m_End)
-		{
-			if (++m_RegionIndex > m_Pool->m_Regions.size())
-				return *this;
-			m_Index = m_Pool->m_Regions[m_RegionIndex].m_Start;
-		}
-		return *this;
-	}
-
-	template <class T, class IndexType>
-	ResourcePoolConstIterator<T, IndexType> ResourcePoolConstIterator<T, IndexType>::operator++(int)
-	{
-		if (m_RegionIndex > m_Pool->m_Regions.size())
-			return *this;
-		ResourcePoolConstIterator copy = *this;
-		if (++m_Index > m_Pool->m_Regions[m_RegionIndex].m_End)
-		{
-			if (++m_RegionIndex > m_Pool->m_Regions.size())
-				return copy;
-			m_Index = m_Pool->m_Regions[m_RegionIndex].m_Start;
-		}
-		return copy;
-	}
-
-	template <class T, class IndexType>
 	bool ResourcePool<T, IndexType>::valid(IndexT index) const
 	{
 		auto ptr = getResourcePtr(index);
@@ -112,7 +30,7 @@ namespace ResourceManager
 				// On region boundary, extend region, merge with next region if they touch
 				for (auto it = iterator + 1; it != m_Regions.end(); ++it)
 					++it->m_Offset;
-				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset + (iterator->m_End - iterator->m_Start) + 1, std::forward<Args>(args)...);
+				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset + (iterator->m_End - iterator->m_Start) + 1, m_CurrentIndex, std::forward<Args>(args)...);
 				iterator->m_End = m_CurrentIndex;
 
 				auto nextIterator = iterator + 1;
@@ -135,7 +53,7 @@ namespace ResourceManager
 				iterator->m_Start = m_CurrentIndex;
 				for (auto it = iterator + 1; it != m_Regions.end(); ++it)
 					++it->m_Offset;
-				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset, std::forward<Args>(args)...);
+				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset, m_CurrentIndex, std::forward<Args>(args)...);
 				nextOptimalIndex();
 
 				if (iterator != m_Regions.begin())
@@ -157,7 +75,7 @@ namespace ResourceManager
 				nextIterator->m_Start = m_CurrentIndex;
 				for (auto it = nextIterator + 1; it != m_Regions.end(); ++it)
 					++it->m_Offset;
-				m_Resources.emplace(m_Resources.begin() + nextIterator->m_Offset, std::forward<Args>(args)...);
+				m_Resources.emplace(m_Resources.begin() + nextIterator->m_Offset, m_CurrentIndex, std::forward<Args>(args)...);
 				nextOptimalIndex();
 
 				if (iterator->m_End == nextIterator->m_Start - 1)
@@ -173,7 +91,7 @@ namespace ResourceManager
 				// Between two regions
 				for (auto it = nextIterator + 1; it != m_Regions.end(); ++it)
 					++it->m_Offset;
-				m_Resources.emplace(m_Resources.begin() + nextIterator->m_Offset + (nextIterator->m_End - nextIterator->m_Start) + 1, std::forward<Args>(args)...);
+				m_Resources.emplace(m_Resources.begin() + nextIterator->m_Offset + (nextIterator->m_End - nextIterator->m_Start) + 1, m_CurrentIndex, std::forward<Args>(args)...);
 				m_Regions.insert(nextIterator, { m_CurrentIndex, m_CurrentIndex, nextIterator->m_Offset + (nextIterator->m_End - nextIterator->m_Start) });
 				++m_CurrentIndex;
 				return Ref { this, index };
@@ -183,7 +101,7 @@ namespace ResourceManager
 				// First index
 				for (auto it = iterator + 1; it != m_Regions.end(); ++it)
 					++it->m_Offset;
-				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset + (iterator->m_End - iterator->m_Start) + 1, std::forward<Args>(args)...);
+				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset + (iterator->m_End - iterator->m_Start) + 1, m_CurrentIndex, std::forward<Args>(args)...);
 				m_Regions.insert(iterator, { m_CurrentIndex, m_CurrentIndex, iterator->m_Offset + (iterator->m_End - iterator->m_Start) });
 				++m_CurrentIndex;
 				return Ref { this, index };
@@ -192,7 +110,7 @@ namespace ResourceManager
 		else
 		{
 			// New region is last
-			m_Resources.emplace_back(std::forward<Args>(args)...);
+			m_Resources.emplace_back(m_CurrentIndex, std::forward<Args>(args)...);
 			m_Regions.push_back({ m_CurrentIndex, m_CurrentIndex, m_Regions.size() });
 			++m_CurrentIndex;
 			return Ref { this, index };
@@ -211,7 +129,7 @@ namespace ResourceManager
 				// On region boundary, extend region, merge with next region if they touch
 				for (auto it = iterator + 1; it != m_Regions.end(); ++it)
 					++it->m_Offset;
-				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset + (iterator->m_End - iterator->m_Start) + 1, std::forward<Args>(args)...);
+				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset + (iterator->m_End - iterator->m_Start) + 1, index, std::forward<Args>(args)...);
 				iterator->m_End = index;
 
 				auto nextIterator = iterator + 1;
@@ -234,7 +152,7 @@ namespace ResourceManager
 				iterator->m_Start = index;
 				for (auto it = iterator + 1; it != m_Regions.end(); ++it)
 					++it->m_Offset;
-				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset, std::forward<Args>(args)...);
+				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset, index, std::forward<Args>(args)...);
 				nextOptimalIndex();
 
 				if (iterator != m_Regions.begin())
@@ -256,7 +174,7 @@ namespace ResourceManager
 				nextIterator->m_Start = index;
 				for (auto it = nextIterator + 1; it != m_Regions.end(); ++it)
 					++it->m_Offset;
-				m_Resources.emplace(m_Resources.begin() + nextIterator->m_Offset, std::forward<Args>(args)...);
+				m_Resources.emplace(m_Resources.begin() + nextIterator->m_Offset, index, std::forward<Args>(args)...);
 				nextOptimalIndex();
 
 				if (iterator->m_End == nextIterator->m_Start - 1)
@@ -272,7 +190,7 @@ namespace ResourceManager
 				// Between two regions
 				for (auto it = nextIterator + 1; it != m_Regions.end(); ++it)
 					++it->m_Offset;
-				m_Resources.emplace(m_Resources.begin() + nextIterator->m_Offset + (nextIterator->m_End - nextIterator->m_Start) + 1, std::forward<Args>(args)...);
+				m_Resources.emplace(m_Resources.begin() + nextIterator->m_Offset + (nextIterator->m_End - nextIterator->m_Start) + 1, index, std::forward<Args>(args)...);
 				m_Regions.insert(nextIterator, { index, index, nextIterator->m_Offset + (nextIterator->m_End - nextIterator->m_Start) });
 				m_CurrentIndex = index + 1;
 				return Ref { this, index };
@@ -282,7 +200,7 @@ namespace ResourceManager
 				// First index
 				for (auto it = iterator + 1; it != m_Regions.end(); ++it)
 					++it->m_Offset;
-				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset + (iterator->m_End - iterator->m_Start) + 1, std::forward<Args>(args)...);
+				m_Resources.emplace(m_Resources.begin() + iterator->m_Offset + (iterator->m_End - iterator->m_Start) + 1, index, std::forward<Args>(args)...);
 				m_Regions.insert(iterator, { index, index, iterator->m_Offset + (iterator->m_End - iterator->m_Start) });
 				m_CurrentIndex = index + 1;
 				return Ref { this, index };
@@ -291,7 +209,7 @@ namespace ResourceManager
 		else
 		{
 			// New region is last
-			m_Resources.emplace_back(std::forward<Args>(args)...);
+			m_Resources.emplace_back(index, std::forward<Args>(args)...);
 			m_Regions.push_back({ index, index, m_Regions.size() });
 			m_CurrentIndex = index + 1;
 			return Ref { this, index };
@@ -342,62 +260,14 @@ namespace ResourceManager
 	T* ResourcePool<T, IndexType>::getResource(IndexT index)
 	{
 		auto ptr = getResourcePtr(index);
-		return ptr ? ptr->getValue() : nullptr;
+		return ptr ? ptr->value() : nullptr;
 	}
 
 	template <class T, class IndexType>
 	const T* ResourcePool<T, IndexType>::getResource(IndexT index) const
 	{
 		auto ptr = getResourcePtr(index);
-		return ptr ? ptr->getValue() : nullptr;
-	}
-
-	template <class T, class IndexType>
-	ResourcePool<T, IndexType>::IteratorT ResourcePool<T, IndexType>::begin()
-	{
-		if (m_Regions.empty())
-			return IteratorT(this, 0, IndexT { 0 });
-		return IteratorT(this, 0, m_Regions[0].m_Start);
-	}
-
-	template <class T, class IndexType>
-	ResourcePool<T, IndexType>::IteratorT ResourcePool<T, IndexType>::end()
-	{
-		if (m_Regions.empty())
-			return IteratorT(this, 0, IndexT { 0 });
-		return IteratorT(this, m_Regions.size() - 1, m_Regions[m_Regions.size() - 1].m_End);
-	}
-
-	template <class T, class IndexType>
-	ResourcePool<T, IndexType>::ConstIteratorT ResourcePool<T, IndexType>::begin() const
-	{
-		if (m_Regions.empty())
-			return ConstIteratorT(this, 0, IndexT { 0 });
-		return ConstIteratorT(this, 0, m_Regions[0].m_Start);
-	}
-
-	template <class T, class IndexType>
-	ResourcePool<T, IndexType>::ConstIteratorT ResourcePool<T, IndexType>::end() const
-	{
-		if (m_Regions.empty())
-			return ConstIteratorT(this, 0, IndexT { 0 });
-		return ConstIteratorT(this, m_Regions.size() - 1, m_Regions[m_Regions.size() - 1].m_End);
-	}
-
-	template <class T, class IndexType>
-	ResourcePool<T, IndexType>::ConstIteratorT ResourcePool<T, IndexType>::cbegin() const
-	{
-		if (m_Regions.empty())
-			return ConstIteratorT(this, 0, IndexT { 0 });
-		return ConstIteratorT(this, 0, m_Regions[0].m_Start);
-	}
-
-	template <class T, class IndexType>
-	ResourcePool<T, IndexType>::ConstIteratorT ResourcePool<T, IndexType>::cend() const
-	{
-		if (m_Regions.empty())
-			return ConstIteratorT(this, 0, IndexT { 0 });
-		return ConstIteratorT(this, m_Regions.size() - 1, m_Regions[m_Regions.size() - 1].m_End);
+		return ptr ? ptr->value() : nullptr;
 	}
 
 	template <class T, class IndexType>

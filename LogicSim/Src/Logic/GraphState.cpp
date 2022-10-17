@@ -7,7 +7,7 @@ GraphState::GraphState(const Graph& graph)
       m_Outputs(m_Graph.outputCount())
 {
 	std::size_t maxOutputs = 0;
-	for (auto node : m_Graph.getNodes())
+	for (auto& node : m_Graph.getNodes())
 	{
 		auto& component = node->getComponent();
 		if (component->hasGraph())
@@ -32,7 +32,7 @@ void GraphState::tick()
 		}
 	}
 
-	for (auto node : m_Graph.getNodes())
+	for (auto& node : m_Graph.getNodes())
 	{
 		auto& component   = node->getComponent();
 		auto& inputPorts  = node->getInputPorts();

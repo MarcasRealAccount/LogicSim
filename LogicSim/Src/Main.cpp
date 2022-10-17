@@ -124,41 +124,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
 	logicSim.removeComponent(logicSim.getComponent("builtin:and"_nn, 3));
 
-	for (auto comp : logicSim.getComponents())
+	for (auto& comp : logicSim.getComponents())
 	{
 		Log::Trace("{} => {}:{};{}", comp.index(), comp->getName().m_Namespace, comp->getName().m_Name, comp->inputCount());
 	}
-
-	//Component andC {
-	//	TruthTable {
-	//	    2, 1,
-	//	    [](std::uint16_t inputs, std::size_t bit, BitSet& bitSet)
-	//	    {
-	//	        bool A = inputs & 1;
-	//	        bool B = (inputs >> 1) & 1;
-	//	        bitSet.set(bit, A && B);
-	//	    } }
-	//};
-	//Component orC {
-	//	TruthTable {
-	//	    2, 1,
-	//	    [](std::uint16_t inputs, std::size_t bit, BitSet& bitSet)
-	//	    {
-	//	        bool A = inputs & 1;
-	//	        bool B = (inputs >> 1) & 1;
-	//	        bitSet.set(bit, A || B);
-	//	    } }
-	//};
-	//Component xorC {
-	//	TruthTable {
-	//	    2, 1,
-	//	    [](std::uint16_t inputs, std::size_t bit, BitSet& bitSet)
-	//	    {
-	//	        bool A = inputs & 1;
-	//	        bool B = (inputs >> 1) & 1;
-	//	        bitSet.set(bit, A ^ B);
-	//	    } }
-	//};
 
 	//Component fullAdder {
 	//	[&]() -> Graph
